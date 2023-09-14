@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+LC_ALL=C
+
+# post commit hook to clean up untracked & dirty files
+# generated during the pre-commit actions,
+# applicable to local development only
+# does not trigger on CI / manual invocations
+
+git clean -dfx \
+  -e "*.env" \
+  -e "*.python-version" \
+  -e ".DS_Store" \
+  -e ".venv" \
+  -e ".vscode" \
+  -e ".idea" \
+  -e ".*_cache" \
+  -e "dist/**/*" \
+  -e "build/**/*" \
+  -e "docs/_build/**/*"

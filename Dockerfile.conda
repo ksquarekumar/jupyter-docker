@@ -1,0 +1,329 @@
+ARG USER_NAME
+ARG EMAIL_ADDRESS
+ARG PORT=8000
+ARG SOURCE_IMAGE_NAME="tensorrt"
+ARG SOURCE_IMAGE_RELEASE="23.08-py3"
+ARG XLA_PYTHON_CLIENT_PREALLOCATE="false"
+ARG XLA_PYTHON_CLIENT_MEM_FRACTION=".50"
+ARG NODE_OPTIONS="--max-old-space-size=16000"
+ARG JAVA_VERSION="openjdk-19"
+ARG NODE_MAJOR="20"
+
+# PULL FROM BASE SOURCE
+FROM "nvcr.io/nvidia/${SOURCE_IMAGE_NAME}:${SOURCE_IMAGE_RELEASE}" AS base
+
+# SET BASE ENV FLAGS & OPTIONS
+ENV USER_NAME=${USER_NAME} \
+    EMAIL_ADDRESS=${EMAIL_ADDRESS}
+    SOURCE_IMAGE_NAME="pytorch" \
+    SOURCE_IMAGE_RELEASE="23.08-py3" \
+    PORT=${PORT} \
+    LC_ALL="C.UTF-8" \
+    DEBIAN_FRONTEND="noninteractive" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_EXTRA_INDEX_URL='https://pypi.nvidia.com' \
+    NODE_MAJOR=${NODE_MAJOR} \
+    JAVA_VERSION=${JAVA_VERSION} \
+    NODE_OPTIONS=${NODE_OPTIONS} \
+    XLA_PYTHON_CLIENT_MEM_FRACTION=${XLA_PYTHON_CLIENT_MEM_FRACTION} \
+    XLA_PYTHON_CLIENT_PREALLOCATE=${XLA_PYTHON_CLIENT_PREALLOCATE}
+
+# hadolint ignore=DL3008,DL3009
+# INSTALL CORE PACKAGES
+RUN apt-get update -q -o Acquire::CompressionTypes::Order::=gz \
+    && mkdir -p /etc/apt/keyrings \
+    && mkdir -p /usr/code \
+    && chmod -R 0777 /usr/code \
+    && install -m 0755 -d /etc/apt/keyrings \
+    && apt-get install -y \
+    --install-suggests \
+    --install-recommends \
+    curl \
+    wget \
+    ca-certificates \
+    gnupg \
+    sudo \
+    ssh \
+    ssh-askpass \
+    ssh-tools \
+    sshfs \
+    openssl \
+    openssh-server \
+    openssh-client \
+    openssh-client-ssh1 \
+    python3.10-full \
+    python3.10-venv \
+    python3-openssl \
+    # register nodejs & yarn repos
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+    && echo "deb https://dl.yarnpkg.com/debian/ rc main" | tee /etc/apt/sources.list.d/yarn.list \
+    # register docker repo
+    && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
+    && chmod a+r /etc/apt/keyrings/docker.gpg \
+    && echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    # register nvidia-docker repo
+    && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+    && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+    # register deadsnakes for python 3.11
+    && add-apt-repository ppa:deadsnakes/ppa -y \
+    # register ngrok
+    && curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list
+    # proceed
+    && apt-get update -q -o Acquire::CompressionTypes::Order::=gz \
+    && apt-get install -y \
+    --no-install-suggests \
+    --no-install-recommends \
+    software-properties-common \
+    apt-utils \
+    debconf \
+    dirmngr \
+    lsb-release \
+    binutils \
+    coreutils \
+    git \
+    zip \
+    unzip \
+    tar \
+    lzma \
+    bzip2 \
+    xz-utils \
+    cron \
+    tzdata \
+    fontconfig \
+    ffmpeg \
+    libavfilter7 \
+    libavcodec-extra \
+    libavfilter-extra7 \
+    libavdevice58 \
+    libavcodec58 \
+    libavcodec-extra58 \
+    libavformat-extra \
+    locales \
+    htop \
+    nano \
+    aria2 \
+    tmux \
+    zsh \
+    gpg \
+    gpg-agent \
+    apt-transport-https \
+    axel \
+    procps \
+    vim \
+    vim-common \
+    less \
+    jq \
+    build-essential \
+    clang-15 \
+    llvm-15 \
+    llvm-15-linker-tools \
+    llvm-15-runtime \
+    pkg-config \
+    ncurses-bin \
+    ncurses-base \
+    make \
+    "${JAVA_VERSION}-jre" \
+    pax-utils \
+    libxml2 \
+    libtbb2 \
+    liblua5.2 \
+    expat \
+    libuv1 \
+    libncursesw5 \
+    libxext6 \
+    libxrender1 \
+    libxtst6 \
+    libfreetype6 \
+    libxi6 \
+    zlib1g \
+    checkinstall \
+    intel-mkl-full \
+    libmkl-tbb-thread \
+    nix \
+    graphviz \
+    # python
+    && apt-get install -y \
+    --no-install-suggests \
+    --no-install-recommends \
+    libedit-dev \
+    libncurses5-dev \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libncursesw5-dev \
+    xz-utils \
+    tk-dev \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libffi-dev \
+    liblzma-dev \
+    python3.11 \
+    python3.11-distutils \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 2 \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.11 2 \
+    && python3 -m pip install --no-cache-dir --upgrade \
+    pip \
+    wheel \
+    python-build \
+    sdist \
+    setuptools \
+    flit \
+    poetry \
+    poetry-conda \
+    conda-lock \
+    && poetry self update \
+    && poetry self add poetry-conda poetry-multiproject-plugin \
+    # nodejs & yarn
+    && apt-get install -y \
+    --no-install-suggests \
+    --no-install-recommends \
+    nodejs \
+    yarn \
+    && update-alternatives --install /usr/bin/nodejs nodejs /usr/bin/node 50 \
+    && update-alternatives --install /usr/bin/yarn yarn /usr/bin/yarn 50 \
+    && update-alternatives --install /usr/bin/npm npm /usr/bin/npm 50 \
+    && /usr/bin/yarn global add yarn \
+    && /usr/bin/npm install --global npm \
+    # install Docker & Co.
+    && apt-get install -y \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin \
+    && ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose || true \
+    # install nvidia-docker
+    && apt-get install -y \
+    nvidia-container-toolkit \
+    && nvidia-ctk runtime configure --runtime=docker || true \
+    && nvidia-ctk runtime configure --runtime=containerd || true \
+    # install ngrok
+    # ref: https://nextjournal.com/schmudde/jupyterdash-and-ngrok
+    && apt-get install -y \
+    ngrok \
+    # setup git
+    && git config --global user.name "${USER_NAME}" \
+    && git config --global user.email "${EMAIL_ADDRESS}" \
+    && git config --global credential.helper store \
+    && git config --global core.filemode false
+
+# CHANGE DEFAULT SHELL
+SHELL ["/bin/zsh", "--login", "-c"]
+
+# MAKE ZSH BOOTSTRAP AVAILABLE
+WORKDIR /opt/zsh
+RUN git clone https://github.com/jotyGill/ezsh.git \
+    && chmod -R +x ./ezsh/*.sh
+
+# INSTALL AWS CLI v2
+WORKDIR /tmp/awscli
+RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip -q awscliv2.zip \
+    && ./aws/install \
+    && rm -rf aws awscliv2.zip
+
+## ENABLE configurable-http-proxy FOR JUPYTERHUB
+RUN npm install --location=global configurable-http-proxy
+
+# SWITCH TO DESIRED ACTIVE DIRECTORY
+WORKDIR /usr/code
+
+# COPY SOURCE(S)
+COPY jupyter_codeserver_proxy "/usr/code/jupyter_codeserver_proxy"
+COPY pyproject.toml "/usr/code/pyproject.toml"
+COPY requirements.txt "/usr/code/requirements.txt"
+COPY environment_core.yml "/usr/code/environment_core.yml"
+COPY environment_jupyter.yml "/usr/code/environment_jupyter.yml"
+
+# INSTALL CODE SERVER
+RUN curl -fsSL https://code-server.dev/install.sh | sh
+
+# hadolint ignore=DL3013,SC2261
+RUN \
+    # ENABLE ML (NVIDIA) INDEX
+    python3 -m pip install --no-cache-dir --upgrade nvidia-pyindex \
+    # INSTALL JUPYTER PACKAGES
+    && python3 -m pip install --no-cache-dir -r requirements.txt \
+    && python3 -m visualpy install \
+    && python3 -m pip install  --no-cache-dir --upgrade ploomber \
+    && jupyter labextension install ipyaggrid \
+    && python3 -m pip install --no-cache-dir --upgrade . \
+    # INSTALL (sys) IPyKernel
+    && python3 -m pip install --no-cache-dir --upgrade ipykernel \
+    && python3 -m ipykernel install --sys-prefix --name "python3-sys"
+
+# hadolint ignore=DL3013,SC2261
+RUN \
+    # SETUP MINIFORGE, PREPARE BASE ENV with POETRY, SET ROOT CONDA CONFIG
+    && curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" \
+    && bash -c Mambaforge-$(uname)-$(uname -m).sh \
+    && rm Mambaforge-$(uname)-$(uname -m).sh \
+    && mamba init bash \
+    && mamba init zsh \
+    && conda config --remove channels defaults || true \
+    && conda config --prepend channels "nodefaults" \
+    && conda config --prepend channels "conda-forge" \
+    && conda config --prepend channels "huggingface" \
+    && conda config --prepend channels "nvidia" \
+    && conda config --prepend channels "nvidia/label/cuda-11.8.0" \
+    && conda config --set channel_priority flexible \
+    && conda config --set auto_stack "1" \
+    && conda config --set auto_activate_base "false" \
+    && conda config --set auto_update_conda "false" \
+    && conda config --prepend track_features "mkl" \
+    && conda config --prepend track_features "cuda"
+
+# CHANGE SHELL TO BASE ENV
+# Credits to: https://pythonspeed.com/articles/activate-conda-dockerfile/
+SHELL ["conda", "run", "-n", "base", "/bin/zsh", "-c"]
+
+# hadolint ignore=DL3013,SC2261
+RUN \
+    # CONTINUE INSTALLATION UNDER BASE ENV
+    mamba activate base \
+    && python3 -m pip install --no-cache-dir --upgrade nvidia-pyindex \
+    && mamba install poetry poetry-conda conda-lock \
+    && python3 -m poetry self add poetry-conda poetry-multiproject-plugin \
+    # CREATE NEW ACTIVE ENVIORNMENT
+    && mamba env create -f "${HOME}/environment_core.yml"
+
+# CHANGE SHELL TO NEW ENV
+SHELL ["conda", "run", "-n", "python311", "/bin/zsh", "-c"]
+
+# hadolint ignore=DL3013,SC2261
+RUN \
+    # CONTINUE SETUP ML (NVIDIA) INDEX + PYINDEX + PRE-DEPS
+    mamba activate python311 \
+    # INSTALL PACKAGES
+    && python3 -m pip install --no-cache-dir --upgrade nvidia-pyindex \
+    && mamba env update -f "${HOME}/environment_jupyter.yml" \
+    && python3 -m visualpy install \
+    && python3 -m pip install  --no-cache-dir --upgrade ploomber \
+    && jupyter labextension install ipyaggrid \
+    && python3 -m pip install --no-cache-dir --upgrade . \
+    # INSTALL (env) IPyKernel
+    && python3 -m pip install --no-cache-dir --upgrade ipykernel \
+    && python3 -m ipykernel install --sys-prefix --name "python311-mamba"
+
+# CHANGE DEFAULT SHELL BACK TO ZSH
+SHELL ["/bin/zsh", "--login", "-c"]
+
+RUN \
+    # DONE, CLEANUP TIME!
+    && apt-get clean -yq \
+    && apt-get autoclean  -yq \
+    && apt-get autoremove --purge -yq \
+    && rm -rf /var/lib/apt/lists/* \
+    && mamba clean -a -y
+
+EXPOSE $PORT
+CMD ["/bin/zsh", "-c", "jupyterhub", "--Spawner.default_url=\"/lab\"", "--Spawner.http_timeout=90", "--NotebookApp.terminado_settings=\"{'shell_command': ['/bin/zsh', '--login', '-c']}\""]

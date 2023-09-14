@@ -1,0 +1,40 @@
+# prefer pip
+name: python311
+channels:
+  - nvidia/label/cuda-11.8.0
+  - nvidia
+  - conda-forge
+  - huggingface
+  - nodefaults
+dependencies:
+  - python~=3.11
+  - pip>=23.2.1
+  - appdirs
+  - conda-lock
+  - wheel
+  - python-build
+  - flit
+  - virtualenv
+  # cuda
+  - cudatoolkit~=11.8.0
+  - cudnn~=8.8.0
+  - cuda-nvcc
+  - nccl
+  # mkl
+  - mkl
+  # utils
+  - ffmpeg
+  # deep-learning
+  - pytorch=*=*cuda*
+  - jaxlib=*=*cuda*
+  - jax
+  # xeus
+  - xeus-cling
+  - xeus-python
+  - xwebrtc
+  - xleaflet
+  - xwidgets
+  # dl libs
+  - huggingface::transformers
+  - huggingface::datasets
+  - huggingface::tokenizers

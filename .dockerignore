@@ -1,0 +1,12 @@
+# Ignore everything at first
+*
+**/*
+
+## Add only what we need
+!environment_core.yml
+!environment_jupyter.yml
+!requirements.txt
+!pyproject.toml
+!jupyter_codeserver_proxy
+!README.md
+!LICENSE

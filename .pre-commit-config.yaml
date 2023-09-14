@@ -1,0 +1,159 @@
+default_stages:
+  - "commit"
+fail_fast: false
+repos:
+  - hooks:
+      - id: cleanup-pre-commit
+        name: Cleanup dirty files before pre-commit checks
+        stages: [commit, push]
+        language: system
+        entry: ./pre-commit/cleanup
+        pass_filenames: false
+        always_run: true
+        types: [file, directory]
+    repo: local
+  - hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+        types: ["json"]
+      - id: end-of-file-fixer
+      - id: check-case-conflict
+      - id: fix-byte-order-marker
+      - id: trailing-whitespace
+      - id: check-added-large-files
+        exclude: "^.*.mp3|lock$"
+        args:
+          - --maxkb=600
+      - id: mixed-line-ending
+    repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+  - hooks:
+      - id: ruff
+        args: ["--fix", "--show-fixes", "--config", "pyproject.toml"]
+        pass_filenames: false
+        types:
+          - "python"
+        exclude_types:
+          - "jupyter"
+    repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.289
+  - hooks:
+      - id: black
+        types:
+          - "python"
+        exclude_types:
+          - "jupyter"
+    repo: https://github.com/psf/black
+    rev: 23.9.1
+  - hooks:
+      - id: mypy
+        name: Static Type Checking with Mypy
+        language: system
+        entry: mypy --install-types --non-interactive --config-file pyproject.toml ./
+        types:
+          - "python"
+        pass_filenames: false
+    repo: local
+  - hooks:
+      - id: nbqa-black
+        additional_dependencies: [black>=23.1.0]
+    repo: https://github.com/nbQA-dev/nbQA
+    rev: "1.7.0"
+  - hooks:
+      - args:
+          - --ignore
+          - DL3008
+        id: hadolint
+    repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.12.0.2
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.3
+    hooks:
+      - id: prettier
+        name: Format yaml, json, toml, markdown, bash, and shell files with prettier
+        additional_dependencies:
+          - prettier@2.8.3
+          - prettier-plugin-sh@0.12.8
+          - prettier-plugin-toml@0.3.1
+        types_or:
+          - yaml
+          - json
+          - toml
+          - markdown
+          - bash
+          - shell
+        pass_filenames: true
+  - hooks:
+      - id: commitizen
+        stages:
+          - commit-msg
+    repo: https://github.com/commitizen-tools/commitizen
+    rev: 3.8.2
+  # - hooks:
+  #     - id: generate-lock
+  #       name: Generate `poetry` lock for `root` `pyproject`
+  #       language: system
+  #       stages: [manual, pre-commit]
+  #       pass_filenames: false
+  #       entry: poetry lock
+  #       args: ["-C", "."]
+  #       files: ^(.*/)?pyproject\.toml$
+  #     - id: check-sync-root
+  #       name: Check `root` `pyproject` and `poetry.lock` are in-sync and valid
+  #       language: system
+  #       pass_filenames: false
+  #       entry: poetry check
+  #       args: ["--lock", "-C", "."]
+  #       files: ^(.*/)?(poetry\.lock|pyproject\.toml)$
+  #     - id: export
+  #       name: run poetry export on `main` deps for `root` project to sync lock file with requirements.txt
+  #       language: system
+  #       pass_filenames: false
+  #       entry: poetry export
+  #       args:
+  #         [
+  #           "--only",
+  #           "main",
+  #           "-C",
+  #           ".",
+  #           "-f",
+  #           "requirements.txt",
+  #           "-o",
+  #           "./requirements.txt",
+  #           "--without-hashes",
+  #         ]
+  #       files: ^(.*/)?poetry\.lock$
+  #   repo: local
+  - hooks:
+      - id: licenseheaders
+        name: Update License headers
+        stages: ["commit", "push"]
+        args:
+          - "-t"
+          - "./pre-commit/LICENSE.tmpl"
+          - "-cy"
+          - "-o"
+          - "krishnakumar <ksquarekumar@gmail.com>"
+          - "-n"
+          - "jupyter-docker"
+          - "-u"
+          - "https://github.com/ksquarekumar/jupyter-docker"
+          - "-f"
+        types_or:
+          - "python"
+          - "executable"
+        exclude: ^whisper_stream/vendored/whisper_jax/
+        pass_filenames: true
+    repo: https://github.com/johann-petrak/licenseheaders.git
+    rev: "v0.8.8"
+  - hooks:
+      - id: cleanup-post-commit
+        name: Cleanup dirty files after pre-commit
+        stages: [post-commit]
+        language: system
+        entry: ./pre-commit/cleanup
+        pass_filenames: false
+        always_run: true
+        types: [file, directory]
+    repo: local
