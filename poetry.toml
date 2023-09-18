@@ -1,6 +1,6 @@
 [virtualenvs]
 prefer-active-python = true
-create = false
+create = true
 in-project = true
 ignore-conda-env = true
 path = "./.venv"

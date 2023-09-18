@@ -14,7 +14,7 @@ FROM "nvcr.io/nvidia/${SOURCE_IMAGE_NAME}:${SOURCE_IMAGE_RELEASE}" AS base
 
 # SET BASE ENV FLAGS & OPTIONS
 ENV USER_NAME=${USER_NAME} \
-    EMAIL_ADDRESS=${EMAIL_ADDRESS}
+    EMAIL_ADDRESS=${EMAIL_ADDRESS} \
     SOURCE_IMAGE_NAME="pytorch" \
     SOURCE_IMAGE_RELEASE="23.08-py3" \
     PORT=${PORT} \
@@ -29,11 +29,17 @@ ENV USER_NAME=${USER_NAME} \
     XLA_PYTHON_CLIENT_MEM_FRACTION=${XLA_PYTHON_CLIENT_MEM_FRACTION} \
     XLA_PYTHON_CLIENT_PREALLOCATE=${XLA_PYTHON_CLIENT_PREALLOCATE}
 
-# hadolint ignore=DL3008,DL3009
+SHELL ["/bin/bash", "-o", "pipefail", "--login", "-c"]
+
 # INSTALL CORE PACKAGES
+# hadolint ignore=DL3008,DL3009,DL3013,DL3015,SC1091
 RUN apt-get update -q -o Acquire::CompressionTypes::Order::=gz \
     && mkdir -p /etc/apt/keyrings \
     && mkdir -p /usr/code \
+    && mkdir -p /var/lock/apache2 \
+    /var/run/apache2 \
+    /var/run/sshd \
+    /var/log/supervisor \
     && chmod -R 0777 /usr/code \
     && install -m 0755 -d /etc/apt/keyrings \
     && apt-get install -y \
@@ -44,6 +50,9 @@ RUN apt-get update -q -o Acquire::CompressionTypes::Order::=gz \
     ca-certificates \
     gnupg \
     sudo \
+    openssh-server \
+    apache2 \
+    supervisor \
     ssh \
     ssh-askpass \
     ssh-tools \
@@ -68,11 +77,11 @@ RUN apt-get update -q -o Acquire::CompressionTypes::Order::=gz \
     && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
     && curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
     sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list \
     # register deadsnakes for python 3.11
     && add-apt-repository ppa:deadsnakes/ppa -y \
     # register ngrok
-    && curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list
+    && curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list \
     # proceed
     && apt-get update -q -o Acquire::CompressionTypes::Order::=gz \
     && apt-get install -y \
@@ -217,7 +226,7 @@ RUN apt-get update -q -o Acquire::CompressionTypes::Order::=gz \
     && git config --global core.filemode false
 
 # CHANGE DEFAULT SHELL
-SHELL ["/bin/zsh", "--login", "-c"]
+SHELL ["/bin/bash", "--login", "-c"]
 
 # MAKE ZSH BOOTSTRAP AVAILABLE
 WORKDIR /opt/zsh
@@ -232,6 +241,7 @@ RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "aw
     && rm -rf aws awscliv2.zip
 
 ## ENABLE configurable-http-proxy FOR JUPYTERHUB
+# hadolint ignore=DL3016
 RUN npm install --location=global configurable-http-proxy
 
 # SWITCH TO DESIRED ACTIVE DIRECTORY
@@ -243,14 +253,16 @@ COPY pyproject.toml "/usr/code/pyproject.toml"
 COPY requirements.txt "/usr/code/requirements.txt"
 COPY environment_core.yml "/usr/code/environment_core.yml"
 COPY environment_jupyter.yml "/usr/code/environment_jupyter.yml"
+COPY supervisor/conf "/etc/supervisor/conf.d/supervisord.conf"
+
 
 # INSTALL CODE SERVER
+# hadolint ignore=DL4006
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 
+# ENABLE ML (NVIDIA) INDEX
 # hadolint ignore=DL3013,SC2261
-RUN \
-    # ENABLE ML (NVIDIA) INDEX
-    python3 -m pip install --no-cache-dir --upgrade nvidia-pyindex \
+RUN python3 -m pip install --no-cache-dir --upgrade nvidia-pyindex \
     # INSTALL JUPYTER PACKAGES
     && python3 -m pip install --no-cache-dir -r requirements.txt \
     && python3 -m visualpy install \
@@ -261,12 +273,11 @@ RUN \
     && python3 -m pip install --no-cache-dir --upgrade ipykernel \
     && python3 -m ipykernel install --sys-prefix --name "python311"
 
-RUN \
-    # DONE, CLEANUP TIME!
-    && apt-get clean -yq \
+# DONE, CLEANUP TIME!
+RUN apt-get clean -yq \
     && apt-get autoclean  -yq \
     && apt-get autoremove --purge -yq \
     && rm -rf /var/lib/apt/lists/*
 
-EXPOSE $PORT
-CMD ["/bin/zsh", "-c", "jupyterhub", "--Spawner.default_url=\"/lab\"", "--Spawner.http_timeout=90", "--NotebookApp.terminado_settings=\"{'shell_command': ['/bin/zsh', '--login', '-c']}\""]
+EXPOSE 22 $PORT
+CMD ["/usr/bin/supervisord"]

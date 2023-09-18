@@ -37,7 +37,7 @@ repos:
         exclude_types:
           - "jupyter"
     repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.289
+    rev: v0.0.290
   - hooks:
       - id: black
         types:
@@ -89,42 +89,39 @@ repos:
         stages:
           - commit-msg
     repo: https://github.com/commitizen-tools/commitizen
-    rev: 3.8.2
-  # - hooks:
-  #     - id: generate-lock
-  #       name: Generate `poetry` lock for `root` `pyproject`
-  #       language: system
-  #       stages: [manual, pre-commit]
-  #       pass_filenames: false
-  #       entry: poetry lock
-  #       args: ["-C", "."]
-  #       files: ^(.*/)?pyproject\.toml$
-  #     - id: check-sync-root
-  #       name: Check `root` `pyproject` and `poetry.lock` are in-sync and valid
-  #       language: system
-  #       pass_filenames: false
-  #       entry: poetry check
-  #       args: ["--lock", "-C", "."]
-  #       files: ^(.*/)?(poetry\.lock|pyproject\.toml)$
-  #     - id: export
-  #       name: run poetry export on `main` deps for `root` project to sync lock file with requirements.txt
-  #       language: system
-  #       pass_filenames: false
-  #       entry: poetry export
-  #       args:
-  #         [
-  #           "--only",
-  #           "main",
-  #           "-C",
-  #           ".",
-  #           "-f",
-  #           "requirements.txt",
-  #           "-o",
-  #           "./requirements.txt",
-  #           "--without-hashes",
-  #         ]
-  #       files: ^(.*/)?poetry\.lock$
-  #   repo: local
+    rev: 3.9.0
+  - hooks:
+      - id: poetry-lock
+        name: Generate `poetry` lock for `root` `pyproject`
+        stages: [manual]
+        pass_filenames: false
+        args: ["-C", "."]
+        files: ^(.*/)?pyproject\.toml$
+      - id: poetry-check
+        name: Check `root` `pyproject` and `poetry.lock` are in-sync and valid
+        pass_filenames: false
+        args: ["--lock", "-C", "."]
+        files: ^(.*/)?(poetry\.lock|pyproject\.toml)$
+      - id: poetry-export
+        name: run poetry export on `main` deps for `root` project to sync lock file with requirements.txt
+        pass_filenames: false
+        args:
+          [
+            "--with",
+            "dev",
+            "--with",
+            "test",
+            "-C",
+            ".",
+            "-f",
+            "requirements.txt",
+            "-o",
+            "./requirements.txt",
+            "--without-hashes",
+          ]
+        files: ^(.*/)?poetry\.lock$
+    repo: https://github.com/python-poetry/poetry.git
+    rev: 1.6.0
   - hooks:
       - id: licenseheaders
         name: Update License headers

@@ -3,6 +3,7 @@
 **/*
 
 ## Add only what we need
+!supervisor
 !environment_core.yml
 !environment_jupyter.yml
 !requirements.txt
