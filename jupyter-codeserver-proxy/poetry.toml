@@ -3,7 +3,7 @@ prefer-active-python = true
 create = false
 in-project = true
 ignore-conda-env = true
-path = "./.venv"
+path = "../.venv"
 
 [virtualenvs.options]
 system-site-packages = false

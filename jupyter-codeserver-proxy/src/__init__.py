@@ -12,7 +12,7 @@
 # # ANY KIND, either express or implied. See the License for the specific
 # # language governing permissions and limitations under the License.
 # #
-# # This file is part of the jupyter-docker.
+# # This file is part of the jupyter-docker project.
 # # see (https://github.com/ksquarekumar/jupyter-docker)
 # #
 # # SPDX-License-Identifier: Apache-2.0

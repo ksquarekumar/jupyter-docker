@@ -1,0 +1,40 @@
+name: base
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.10,<=3.11
+  - mamba
+  - pip>=23.2.1
+  - appdirs
+  - wheel
+  - setuptools
+  - setuptools-rust
+  - flit
+  - hatchling
+  - python-build
+  - poetry
+  - conda-lock
+  - conda-pack
+  - conda-build
+  - virtualenv
+  - texlab
+  - chktex
+  - ipykernel
+  - xeus-python
+  - black
+  - ruff
+  - mypy
+  - nbqa
+  - pre-commit
+  - commitizen
+  - watchdog
+  - pip:
+      - poetry
+      - poetry-conda
+      - poetry-multiproject-plugin
+      - nox
+      - nox-poetry
+      - nvidia-pyindex
+      - pyclean
+      - -r requirements.txt

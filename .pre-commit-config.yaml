@@ -30,7 +30,13 @@ repos:
     rev: v4.4.0
   - hooks:
       - id: ruff
-        args: ["--fix", "--show-fixes", "--config", "pyproject.toml"]
+        args:
+          [
+            "--fix",
+            "--show-fixes",
+            "--config",
+            "./jupyter-codeserver-proxy/pyproject.toml",
+          ]
         pass_filenames: false
         types:
           - "python"
@@ -50,16 +56,11 @@ repos:
       - id: mypy
         name: Static Type Checking with Mypy
         language: system
-        entry: mypy --install-types --non-interactive --config-file pyproject.toml ./
+        entry: mypy --install-types --non-interactive --config-file ./jupyter-codeserver-proxy/pyproject.toml jupyter-codeserver-proxy
         types:
           - "python"
         pass_filenames: false
     repo: local
-  - hooks:
-      - id: nbqa-black
-        additional_dependencies: [black>=23.1.0]
-    repo: https://github.com/nbQA-dev/nbQA
-    rev: "1.7.0"
   - hooks:
       - args:
           - --ignore
@@ -92,31 +93,29 @@ repos:
     rev: 3.9.0
   - hooks:
       - id: poetry-lock
-        name: Generate `poetry` lock for `root` `pyproject`
+        name: Generate `poetry` lock for `codeserver` `pyproject`
         stages: [manual]
         pass_filenames: false
-        args: ["-C", "."]
+        args: ["-C", "./jupyter-codeserver-proxy"]
         files: ^(.*/)?pyproject\.toml$
       - id: poetry-check
-        name: Check `root` `pyproject` and `poetry.lock` are in-sync and valid
+        name: Check `codeserver` `pyproject` and `poetry.lock` are in-sync and valid
         pass_filenames: false
-        args: ["--lock", "-C", "."]
+        args: ["--lock", "-C", "./jupyter-codeserver-proxy/"]
         files: ^(.*/)?(poetry\.lock|pyproject\.toml)$
       - id: poetry-export
-        name: run poetry export on `main` deps for `root` project to sync lock file with requirements.txt
+        name: run poetry export on `main` deps for `codeserver` project to sync lock file with requirements.txt
         pass_filenames: false
         args:
           [
             "--with",
-            "dev",
-            "--with",
             "test",
             "-C",
-            ".",
+            "./jupyter-codeserver-proxy/",
             "-f",
             "requirements.txt",
             "-o",
-            "./requirements.txt",
+            "./kernels/base/requirements.txt",
             "--without-hashes",
           ]
         files: ^(.*/)?poetry\.lock$
@@ -139,8 +138,8 @@ repos:
           - "-f"
         types_or:
           - "python"
+          - "dockerfile"
           - "executable"
-        exclude: ^whisper_stream/vendored/whisper_jax/
         pass_filenames: true
     repo: https://github.com/johann-petrak/licenseheaders.git
     rev: "v0.8.8"

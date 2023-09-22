@@ -3,11 +3,9 @@
 **/*
 
 ## Add only what we need
-!supervisor
-!environment_core.yml
-!environment_jupyter.yml
-!requirements.txt
-!pyproject.toml
-!jupyter_codeserver_proxy
-!README.md
-!LICENSE
+!supervisor/conf
+!scripts/update_mirrors.sh
+!kernels/base/environment.yml
+!kernels/base/requirements.txt
+!kernels/python311/environment.yml
+!jupyter-codeserver-proxy
