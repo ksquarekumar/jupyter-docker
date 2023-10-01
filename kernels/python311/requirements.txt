@@ -1,0 +1,80 @@
+evaluate; python_version >= "3.11" and python_version < "3.12"
+kenlm; python_version >= "3.11" and python_version < "3.12"
+# agents
+langchain
+dspy; python_version >= "3.11" and python_version < "3.12"
+griptape; python_version >= "3.11" and python_version < "3.12"
+# data
+decord; python_version >= "3.11" and python_version < "3.12"
+phonemizer; python_version >= "3.11" and python_version < "3.12"
+# llms
+openai
+tiktoken
+clarifai
+cohere
+anthropic
+openlm
+nlpcloud
+# integrations
+google-auth
+google-api-python-client
+google-searh-results
+azure-identity
+azure-ai-formrecognizer
+azure-ai-vision
+azure-cognitiveservices-speech
+azure-cosmos
+atlassian-python-api
+wikipedia
+arxiv
+newspaper3k
+wolframalpha
+deeplake
+libdeeplake
+assemblyai
+pyowm
+gptcache
+pypdf
+bibtexparser
+markdownify
+jq
+gql
+lark
+rdflib
+pytesseract
+html2text
+duckduckgo-search
+pdfminer-six
+neo4j
+lancedb
+amadeus
+rank-bm25
+psychicapi
+telethon
+esprima
+# deployment/integrations
+deepspeed>=0.10.3; python_version >= "3.11" and python_version < "3.12"
+sagemaker; python_version >= "3.11" and python_version < "3.12"
+sigopt; python_version >= "3.11" and python_version < "3.12"
+ray[all]; python_version >= "3.11" and python_version < "3.12"
+olive-ai>=0.3.1; python_version >= "3.11" and python_version < "3.12"
+# onnx
+onnxruntime>=1.16.0; python_version >= "3.11" and python_version < "3.12"
+onnxruntime-gpu>=1.16.0; python_version >= "3.11" and python_version < "3.12"
+onnxruntime-tools>=1.7.0; python_version >= "3.11" and python_version < "3.12"
+onnxconverter-common>=1.14.0; python_version >= "3.11" and python_version < "3.12"
+# serving
+pydantic; python_version >= "3.11" and python_version < "3.12"
+fastapi; python_version >= "3.11" and python_version < "3.12"
+starlette; python_version >= "3.11" and python_version < "3.12"
+uvicorn; python_version >= "3.11" and python_version < "3.12"
+# jax
+flax>=0.7.2; python_version >= "3.11" and python_version < "3.12"
+optax; python_version >= "3.11" and python_version < "3.12"
+# debug
+sliceguard; python_version >= "3.11" and python_version < "3.12"
+spotlight; python_version >= "3.11" and python_version < "3.12"
+perspective-python; python_version >= "3.11" and python_version < "3.12"
+viztracer; python_version >= "3.11" and python_version < "3.12"
+yappi; python_version >= "3.11" and python_version < "3.12"
+filprofiler; python_version >= "3.11" and python_version < "3.12"

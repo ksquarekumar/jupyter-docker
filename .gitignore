@@ -163,3 +163,4 @@ notebooks/viztracer_report.json
 /log_config.yaml
 
 .autoversion
+nohup.out

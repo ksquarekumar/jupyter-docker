@@ -1,11 +1,14 @@
 name: base
 channels:
   - conda-forge
-  - defaults
 dependencies:
-  - python>=3.10,<=3.11
-  - mamba
+  - python>=3.11,<=3.12
   - pip>=23.2.1
+  - poetry>=1.6.1
+  - ca-certificates
+  - certifi
+  - openssl
+  - mamba
   - appdirs
   - wheel
   - setuptools
@@ -13,28 +16,30 @@ dependencies:
   - flit
   - hatchling
   - python-build
-  - poetry
+  - packaging
+  - libsolv
+  - pycosat
+  - conda-libmamba-solver
   - conda-lock
   - conda-pack
   - conda-build
   - virtualenv
+  - zstandard
+  - joblib
+  - psutil
+  - pathos
+  - dill
   - texlab
   - chktex
   - ipykernel
   - xeus-python
   - black
   - ruff
+  - nox
   - mypy
   - nbqa
   - pre-commit
   - commitizen
   - watchdog
   - pip:
-      - poetry
-      - poetry-conda
-      - poetry-multiproject-plugin
-      - nox
-      - nox-poetry
-      - nvidia-pyindex
-      - pyclean
-      - -r requirements.txt
+      - -r ./requirements.txt

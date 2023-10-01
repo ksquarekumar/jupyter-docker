@@ -3,9 +3,26 @@
 **/*
 
 ## Add only what we need
+
+# conf
 !supervisor/conf
-!scripts/update_mirrors.sh
+!glances/glances.conf
+
+# scripts
+!scripts/bootstrap.sh
+!scripts/setup_packages.sh
+!scripts/tune_kernel_opts.py
+!scripts/setup_trt.sh
+
+# kernel - base
 !kernels/base/environment.yml
 !kernels/base/requirements.txt
+!kernels/base/setup_base.sh
+
+# kernel - python311
 !kernels/python311/environment.yml
+!kernels/python311/requirements.txt
+!kernels/python311/setup_python311.sh
+
+# packages
 !jupyter-codeserver-proxy

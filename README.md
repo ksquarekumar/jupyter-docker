@@ -14,6 +14,10 @@ docker buildx build -t jupyter-docker:latest -f Dockerfile .
 docker run -itd jupyter-docker:latest --env "PORT=$PORT"
 ```
 
+### [NGC Readme](./NGC_TENSORRT.md)
+
+> `/workspace/tensorrt` is moved to `opt/trt-workspace`
+
 ## Development
 
 ```

@@ -22,8 +22,12 @@ serverurl=unix:///dev/shm/supervisor.sock ; use a unix:// URL  for a unix socket
 [include]
 files = /etc/supervisor/conf.d/*.conf
 
+[program:bootstrap]
+command=/opt/scripts/bootstrap.sh
+directory=/opt/scripts
+
 [program:dockerd]
-command=/usr/bin/dockerd --host=unix:///var/run/docker.sock
+command=dockerd-rootless.sh -H tcp://0.0.0.0:2376 --tlsverify --tlscacert=ca.pem --tlscert=cert.pem --tlskey=key.pem
 autorestart=true
 killasgroup=true
 stopasgroup=true
@@ -41,7 +45,7 @@ stderr_logfile=/dev/fd/2
 stderr_logfile_maxbytes=0
 
 [program:jupyter]
-command=conda run -n --no-capture-output python311 /bin/bash -c "jupyterhub --Spawner.default_url=\"/lab\" --Spawner.http_timeout=90 --NotebookApp.terminado_settings=\"{'shell_command': ['conda', 'run', '--no-capture-output', '-n', 'python311', '/bin/zsh', '--login', '-c']}\"" -DFOREGROUND
+command=mamba run --no-capture-output -n base /bin/bash -c "jupyterhub --Spawner.default_url=\"/lab\" --Spawner.http_timeout=90 --NotebookApp.terminado_settings=\"{'shell_command': ['mamba', 'run', '--no-capture-output', '-n', 'base', '/bin/zsh', '-c']}\"" -DFOREGROUND
 autorestart=true
 killasgroup=true
 stopasgroup=true
@@ -49,3 +53,7 @@ stdout_logfile=/dev/fd/1
 stdout_logfile_maxbytes=0
 stderr_logfile=/dev/fd/2
 stderr_logfile_maxbytes=0
+
+# [program:ngrok]
+# command=mamba run -n --no-capture-output python311 /bin/bash -c "ngrok http "${NGROK_PORT}" --log=stdout 80 > ngrok.log"
+# directory=/opt/scripts
