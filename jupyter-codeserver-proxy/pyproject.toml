@@ -43,7 +43,7 @@ nbdime = { version = "^3.2.1", python = "^3.11" }
 ipympl = { version = "^0.9.3", python = "^3.11" }
 jupyterhub = { version = "^4.0.2", python = "^3.11" }
 jupyterlab = { version = "^3.6.5", python = "^3.11" }
-jupyter-server = { version = "^2.7.3", python = "^3.11" }
+jupyter-server = { version = "^2.11.2", python = "^3.11" }
 notebook = { version = "^6.5.6", python = "^3.11" }
 nbconvert = { version = "^6.5.3", python = "^3.11" }
 jupytext = { version = "^1.15.2", python = "^3.11" }
